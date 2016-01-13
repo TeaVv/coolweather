@@ -8,6 +8,8 @@ import com.example.coolweather.R.id;
 import com.example.coolweather.R.layout;
 
 import android.app.Activity;
+import android.content.Intent;
+
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -15,11 +17,13 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class WeatherActivity extends Activity {
+public class WeatherActivity extends Activity implements OnClickListener{
 
 	private LinearLayout weatherInfoLayout;
 	/**
@@ -46,6 +50,14 @@ public class WeatherActivity extends Activity {
 	 * 用于显示当前日期
 	 */
 	private TextView currentDateText;
+	/**
+	 * 切换城市按钮
+	 */
+	private Button switchCity;
+	/**
+	 * 更新天气按钮
+	 */
+	private Button refreshWeather;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -62,14 +74,42 @@ public class WeatherActivity extends Activity {
 		String countyCode = getIntent().getStringExtra("county_code");
 		if (!TextUtils.isEmpty(countyCode)) {
 			//有县级代号时就去查询天气
+			//Toast.makeText(WeatherActivity.this, "Update", Toast.LENGTH_SHORT).show();
 			publishText.setText("同步中...");
 			weatherInfoLayout.setVisibility(View.INVISIBLE);
 			cityNameText.setVisibility(View.INVISIBLE);
-			Toast.makeText(WeatherActivity.this, "oncreate", Toast.LENGTH_SHORT).show();
 			queryWeatherCode(countyCode);
 		} else {
 			//没有县级代号时就直接显示本地天气
+			//Toast.makeText(WeatherActivity.this, "No Change", Toast.LENGTH_SHORT).show();
 			showWeather();
+		}
+		switchCity = (Button) findViewById(R.id.switch_city);
+		refreshWeather = (Button) findViewById(R.id.refresh_weather);
+		switchCity.setOnClickListener(this);
+		refreshWeather.setOnClickListener(this);
+	}
+	
+	@Override
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		switch (v.getId()) {
+		case R.id.switch_city:
+			Intent intent = new Intent(this, ChooseAreaActivity.class);
+			intent.putExtra("from_weather_activity", true);
+			startActivity(intent);
+			finish();
+			break;
+		case R.id.refresh_weather:
+			publishText.setText("同步中...");
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+			String weatherCode = prefs.getString("weather_code", "");
+			if (!TextUtils.isEmpty(weatherCode)) {
+				queryWeatherInfo(weatherCode);
+			}
+			break;
+		default:
+			break;
 		}
 	}
 	
@@ -78,7 +118,7 @@ public class WeatherActivity extends Activity {
 	 */
 	private void queryWeatherCode(String countyCode) {
 		String address = "http://www.weather.com.cn/data/list3/city" + countyCode + ".xml";
-		Toast.makeText(WeatherActivity.this, "queryweathercode", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(WeatherActivity.this, "queryweathercode", Toast.LENGTH_SHORT).show();
 		queryFromServer(address, "countyCode");
 	}
 	
@@ -154,10 +194,11 @@ public class WeatherActivity extends Activity {
 		cityNameText.setVisibility(View.VISIBLE);
 	}
 	
-	@Override
+	/*@Override
 	public void onBackPressed() {
 		// TODO Auto-generated method stub
 		super.onBackPressed();
 		finish();
 	}
+*/
 }
